@@ -1,142 +1,194 @@
+
+
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Nexora App</title>
+<title>Nexora PRO</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
-
 body{
   margin:0;
-  font-family:'Poppins', sans-serif;
-  background: linear-gradient(135deg,#1e3c72,#2a5298);
+  font-family:'Poppins',sans-serif;
+  background:linear-gradient(135deg,#4f46e5,#9333ea);
   color:white;
   text-align:center;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
 }
 
 .container{
-  background:rgba(255,255,255,0.08);
-  padding:50px;
+  padding:60px 20px;
+}
+
+.card{
+  background:rgba(255,255,255,0.1);
+  padding:40px;
   border-radius:20px;
-  backdrop-filter: blur(10px);
-  width:350px;
-  animation:fadeIn 1s ease-in-out;
-  box-shadow:0 20px 40px rgba(0,0,0,0.3);
+  backdrop-filter:blur(15px);
+  display:inline-block;
+  animation:fadeIn 0.8s ease;
+  max-width:500px;
+  width:100%;
 }
 
 h1{
+  font-size:38px;
   margin-bottom:10px;
-  font-weight:700;
 }
 
-#estado{
-  margin-bottom:25px;
-  font-weight:500;
+p{
+  opacity:0.9;
 }
 
 button{
-  width:100%;
-  padding:14px;
-  margin:10px 0;
+  padding:12px 25px;
   border:none;
-  border-radius:10px;
+  border-radius:30px;
   font-size:15px;
-  font-weight:500;
   cursor:pointer;
   transition:0.3s;
+  margin-top:15px;
 }
 
-.free{
-  background:#ffffff20;
+.buy{
+  background:#facc15;
+  color:black;
+}
+
+.primary{
+  background:#22c55e;
   color:white;
 }
 
-.free:hover{
-  background:#ffffff40;
-}
-
-.pro{
-  background:#00c9ff;
+.danger{
+  background:#ef4444;
   color:white;
 }
 
-.pro:hover{
+button:hover{
   transform:scale(1.05);
-  background:#00a8e8;
+  box-shadow:0 10px 20px rgba(0,0,0,0.3);
 }
 
-.proFeature{
-  background:#00e676;
-  color:white;
-  display:none;
+input,textarea{
+  width:100%;
+  padding:12px;
+  margin-top:15px;
+  border-radius:10px;
+  border:none;
+  font-family:'Poppins';
 }
 
-.proFeature:hover{
-  transform:scale(1.05);
+.result{
+  margin-top:20px;
+  background:rgba(0,0,0,0.3);
+  padding:15px;
+  border-radius:10px;
+  text-align:left;
 }
 
 @keyframes fadeIn{
-  from{opacity:0; transform:translateY(20px);}
-  to{opacity:1; transform:translateY(0);}
+  from{opacity:0;transform:translateY(-20px);}
+  to{opacity:1;transform:translateY(0);}
 }
-
 </style>
 </head>
 
 <body>
 
 <div class="container">
+<div class="card">
 
-<h1>Nexora</h1>
-<div id="estado"></div>
+<h1>Nexora PRO</h1>
+<p>Herramienta inteligente premium</p>
 
-<button class="free" onclick="usarFree()">Usar versión FREE</button>
+<div id="app"></div>
 
-<button id="btnPro" class="pro" onclick="irAPagar()">Comprar PRO</button>
-
-<button id="funcionPro" class="proFeature" onclick="funcionPro()">Acceder a Función PRO</button>
-
+</div>
 </div>
 
 <script>
 
+// Detectar pago
 let params = new URLSearchParams(window.location.search);
-
-if(params.get("pago") === "ok"){
+if(params.get("pago")==="ok"){
   localStorage.setItem("plan","pro");
 }
 
 let plan = localStorage.getItem("plan");
 
-if(plan === "pro"){
-  document.getElementById("estado").innerText = "🚀 Plan PRO activo";
-  document.getElementById("funcionPro").style.display = "block";
-  document.getElementById("btnPro").style.display = "none";
+// Renderizar
+if(plan==="pro"){
+  cargarApp();
 }else{
-  document.getElementById("estado").innerText = "Plan FREE activo";
+  mostrarPago();
 }
 
-function usarFree(){
-  alert("Estás usando la versión gratuita.");
+// Pantalla pago
+function mostrarPago(){
+  document.getElementById("app").innerHTML=`
+  <p>Acceso completo a la herramienta</p>
+  <h2>USD 15</h2>
+  <button class="buy" onclick="irAPagar()">Comprar Acceso PRO</button>
+  `;
 }
 
+// Ir a Mercado Pago
 function irAPagar(){
-  window.location.href = "https://mpago.la/287RTsB";
+  window.location.href="https://mpago.la/287RTsB";
 }
 
-function funcionPro(){
-  alert("Función PRO desbloqueada correctamente.");
+// App PRO real
+function cargarApp(){
+  document.getElementById("app").innerHTML=`
+    <textarea id="prompt" placeholder="Escribe lo que quieres generar..."></textarea>
+    <button class="primary" onclick="generar()">Generar</button>
+    <button class="danger" onclick="cerrarSesion()">Cerrar Sesión</button>
+    <div class="result" id="resultado"></div>
+    <div class="result" id="historial"></div>
+  `;
+  cargarHistorial();
+}
+
+// Generador IA simulado
+function generar(){
+  let texto=document.getElementById("prompt").value;
+  if(texto.trim()==="") return;
+
+  let respuesta="✨ Resultado generado para: "+texto+"\n\n"+
+  "Aquí tienes una idea optimizada y estructurada lista para usar.";
+
+  document.getElementById("resultado").innerText=respuesta;
+
+  guardarHistorial(respuesta);
+}
+
+// Guardar historial
+function guardarHistorial(texto){
+  let historial=JSON.parse(localStorage.getItem("historial"))||[];
+  historial.unshift(texto);
+  localStorage.setItem("historial",JSON.stringify(historial));
+  cargarHistorial();
+}
+
+// Mostrar historial
+function cargarHistorial(){
+  let historial=JSON.parse(localStorage.getItem("historial"))||[];
+  let html="<h3>Historial</h3>";
+  historial.slice(0,5).forEach(item=>{
+    html+="<div style='margin-top:10px;font-size:13px;'>"+item+"</div>";
+  });
+  document.getElementById("historial").innerHTML=html;
+}
+
+// Cerrar sesión
+function cerrarSesion(){
+  localStorage.removeItem("plan");
+  location.reload();
 }
 
 </script>
 
 </body>
 </html>
-
-
