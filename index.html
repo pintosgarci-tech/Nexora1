@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mi Web App Premium</title>
+  <meta charset="UTF-8">
+</head>
+
+<body style="font-family:Arial;text-align:center;margin-top:60px;">
+
+<h1>Mi Web App</h1>
+
+<div id="estado"></div>
+
+<br><br>
+
+<button onclick="usarFree()" 
+style="padding:10px 25px;background:gray;color:white;border:none;border-radius:6px;">
+Usar versión FREE
+</button>
+
+<br><br>
+
+<button id="btnPro" onclick="irAPagar()" 
+style="padding:15px 40px;background:#009ee3;color:white;border:none;border-radius:8px;font-size:16px;">
+Comprar PRO
+</button>
+
+<br><br>
+
+<button id="funcionPro" onclick="funcionPro()" 
+style="padding:15px 40px;background:green;color:white;border:none;border-radius:8px;font-size:16px;display:none;">
+Usar Función PRO
+</button>
+
+<script>
+
+let urlParams = new URLSearchParams(window.location.search);
+
+if (urlParams.get("pago") === "ok") {
+  localStorage.setItem("plan", "pro");
+}
+
+let plan = localStorage.getItem("plan");
+
+if (plan === "pro") {
+  document.getElementById("estado").innerHTML = "<h2>Plan PRO activo</h2>";
+  document.getElementById("funcionPro").style.display = "inline-block";
+  document.getElementById("btnPro").style.display = "none";
+} else {
+  document.getElementById("estado").innerHTML = "<h2>Plan FREE</h2>";
+}
+
+function usarFree() {
+  alert("Estás usando la versión gratuita");
+}
+
+function irAPagar() {
+  window.location.href = "PEGA_AQUI_TU_LINK_DE_MERCADO_PAGO";
+}
+
+function funcionPro() {
+  alert("Función PRO desbloqueada");
+}
+
+</script>
+
+</body>
+</html>
