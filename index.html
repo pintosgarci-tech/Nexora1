@@ -1,191 +1,236 @@
-
-
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Nexora PRO</title>
-
+<title>Nexora AI Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
 <style>
-body{
-  margin:0;
-  font-family:'Poppins',sans-serif;
-  background:linear-gradient(135deg,#4f46e5,#9333ea);
-  color:white;
-  text-align:center;
-}
 
-.container{
-  padding:60px 20px;
+body{
+margin:0;
+font-family:'Poppins',sans-serif;
+background:linear-gradient(135deg,#0f172a,#4f46e5);
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
 }
 
 .card{
-  background:rgba(255,255,255,0.1);
-  padding:40px;
-  border-radius:20px;
-  backdrop-filter:blur(15px);
-  display:inline-block;
-  animation:fadeIn 0.8s ease;
-  max-width:500px;
-  width:100%;
+background:#1e293b;
+padding:40px;
+border-radius:20px;
+width:95%;
+max-width:700px;
+text-align:center;
+box-shadow:0 25px 60px rgba(0,0,0,0.6);
+animation:fade 0.8s ease;
 }
 
-h1{
-  font-size:38px;
-  margin-bottom:10px;
-}
-
-p{
-  opacity:0.9;
+textarea,input,select{
+width:100%;
+padding:12px;
+margin-top:15px;
+border-radius:10px;
+border:none;
+font-family:'Poppins';
 }
 
 button{
-  padding:12px 25px;
-  border:none;
-  border-radius:30px;
-  font-size:15px;
-  cursor:pointer;
-  transition:0.3s;
-  margin-top:15px;
+padding:12px 25px;
+border:none;
+border-radius:25px;
+cursor:pointer;
+margin-top:15px;
+font-weight:600;
+transition:0.3s;
 }
 
-.buy{
-  background:#facc15;
-  color:black;
-}
-
-.primary{
-  background:#22c55e;
-  color:white;
-}
-
-.danger{
-  background:#ef4444;
-  color:white;
-}
+.primary{background:#22c55e;color:white;}
+.buy{background:#facc15;color:black;}
+.danger{background:#ef4444;color:white;}
 
 button:hover{
-  transform:scale(1.05);
-  box-shadow:0 10px 20px rgba(0,0,0,0.3);
-}
-
-input,textarea{
-  width:100%;
-  padding:12px;
-  margin-top:15px;
-  border-radius:10px;
-  border:none;
-  font-family:'Poppins';
+transform:scale(1.05);
+box-shadow:0 10px 25px rgba(0,0,0,0.5);
 }
 
 .result{
-  margin-top:20px;
-  background:rgba(0,0,0,0.3);
-  padding:15px;
-  border-radius:10px;
-  text-align:left;
+margin-top:20px;
+background:#0f172a;
+padding:15px;
+border-radius:10px;
+text-align:left;
+white-space:pre-line;
+max-height:200px;
+overflow:auto;
+font-size:14px;
 }
 
-@keyframes fadeIn{
-  from{opacity:0;transform:translateY(-20px);}
-  to{opacity:1;transform:translateY(0);}
+small{opacity:0.7;}
+
+@keyframes fade{
+from{opacity:0;transform:translateY(-20px);}
+to{opacity:1;transform:translateY(0);}
 }
+
 </style>
 </head>
-
 <body>
 
-<div class="container">
 <div class="card">
-
-<h1>Nexora PRO</h1>
-<p>Herramienta inteligente premium</p>
-
+<h1>Nexora AI</h1>
 <div id="app"></div>
-
-</div>
 </div>
 
 <script>
 
-// Detectar pago
-let params = new URLSearchParams(window.location.search);
-if(params.get("pago")==="ok"){
-  localStorage.setItem("plan","pro");
+// ===== CONFIG =====
+const HORAS_PRUEBA = 24;
+
+// Códigos PRO válidos
+function hash(t){
+let h=0;
+for(let i=0;i<t.length;i++){
+h=((h<<5)-h)+t.charCodeAt(i);
+h|=0;
+}
+return h;
 }
 
-let plan = localStorage.getItem("plan");
+const codigosHash=[
+hash("NX-8472-PRO"),
+hash("NX-9901-MAX"),
+hash("NX-5519-SECURE")
+];
 
-// Renderizar
-if(plan==="pro"){
-  cargarApp();
+// ===== ESTADO =====
+
+let licencia = localStorage.getItem("licencia");
+let inicioPrueba = localStorage.getItem("inicioPrueba");
+let ahora = Date.now();
+
+// Si no empezó prueba, iniciarla
+if(!inicioPrueba){
+localStorage.setItem("inicioPrueba", ahora);
+inicioPrueba = ahora;
+}
+
+let tiempoRestante = (HORAS_PRUEBA*60*60*1000) - (ahora - inicioPrueba);
+
+// Verificar PRO
+function esPro(){
+if(!licencia) return false;
+let partes = licencia.split("|");
+if(partes.length!==2) return false;
+let codigoHash=parseInt(partes[0]);
+let navHash=parseInt(partes[1]);
+return codigosHash.includes(codigoHash) && navHash===hash(navigator.userAgent);
+}
+
+if(esPro()){
+cargarApp(true);
 }else{
-  mostrarPago();
+if(tiempoRestante>0){
+cargarApp(false,true);
+}else{
+mostrarBloqueo();
+}
 }
 
-// Pantalla pago
-function mostrarPago(){
-  document.getElementById("app").innerHTML=`
-  <p>Acceso completo a la herramienta</p>
-  <h2>USD 15</h2>
-  <button class="buy" onclick="irAPagar()">Comprar Acceso PRO</button>
-  `;
+// ===== APP =====
+
+function cargarApp(pro, pruebaActiva){
+
+let textoEstado="";
+if(pro){
+textoEstado="PRO Activo";
+}else if(pruebaActiva){
+let horas=Math.floor(tiempoRestante/1000/60/60);
+textoEstado="Prueba gratuita activa - "+horas+"h restantes";
 }
 
-// Ir a Mercado Pago
-function irAPagar(){
-  window.location.href="https://mpago.la/287RTsB";
+document.getElementById("app").innerHTML=`
+
+<small>${textoEstado}</small>
+
+<select id="tipo">
+<option value="negocio">Idea de Negocio</option>
+<option value="ventas">Texto de Ventas</option>
+<option value="post">Post Redes</option>
+<option value="plan">Mini Plan Estratégico</option>
+</select>
+
+<textarea id="prompt" placeholder="Escribe aquí..."></textarea>
+
+<button class="primary" onclick="generar()">Generar</button>
+
+${pro ? 
+`<button class="danger" onclick="logout()">Cerrar sesión</button>` :
+`<button class="buy" onclick="mostrarPago()">Desbloquear PRO</button>`}
+
+<div class="result" id="resultado"></div>
+`;
 }
 
-// App PRO real
-function cargarApp(){
-  document.getElementById("app").innerHTML=`
-    <textarea id="prompt" placeholder="Escribe lo que quieres generar..."></textarea>
-    <button class="primary" onclick="generar()">Generar</button>
-    <button class="danger" onclick="cerrarSesion()">Cerrar Sesión</button>
-    <div class="result" id="resultado"></div>
-    <div class="result" id="historial"></div>
-  `;
-  cargarHistorial();
-}
-
-// Generador IA simulado
 function generar(){
-  let texto=document.getElementById("prompt").value;
-  if(texto.trim()==="") return;
+let texto=document.getElementById("prompt").value;
+if(texto.trim()==="") return;
 
-  let respuesta="✨ Resultado generado para: "+texto+"\n\n"+
-  "Aquí tienes una idea optimizada y estructurada lista para usar.";
+let salida="🚀 Resultado profesional para:\n\n"+texto+
+"\n\nEstrategia estructurada y optimizada lista para aplicar.";
 
-  document.getElementById("resultado").innerText=respuesta;
-
-  guardarHistorial(respuesta);
+document.getElementById("resultado").innerText=salida;
 }
 
-// Guardar historial
-function guardarHistorial(texto){
-  let historial=JSON.parse(localStorage.getItem("historial"))||[];
-  historial.unshift(texto);
-  localStorage.setItem("historial",JSON.stringify(historial));
-  cargarHistorial();
+// ===== BLOQUEO =====
+
+function mostrarBloqueo(){
+document.getElementById("app").innerHTML=`
+<h2>Prueba finalizada</h2>
+<p>Desbloquea la versión PRO para seguir usando la herramienta.</p>
+<button class="buy" onclick="mostrarPago()">Comprar PRO</button>
+`;
 }
 
-// Mostrar historial
-function cargarHistorial(){
-  let historial=JSON.parse(localStorage.getItem("historial"))||[];
-  let html="<h3>Historial</h3>";
-  historial.slice(0,5).forEach(item=>{
-    html+="<div style='margin-top:10px;font-size:13px;'>"+item+"</div>";
-  });
-  document.getElementById("historial").innerHTML=html;
+// ===== PAGO =====
+
+function mostrarPago(){
+document.getElementById("app").innerHTML=`
+<h2>Versión PRO - USD 15</h2>
+<p>Paga y recibe tu código de activación.</p>
+
+<button class="buy" onclick="irPago()">Pagar con Mercado Pago</button>
+
+<br><br>
+
+<input id="codigo" placeholder="Nx1992">
+<button class="primary" onclick="activar()">Activar</button>
+`;
 }
 
-// Cerrar sesión
-function cerrarSesion(){
-  localStorage.removeItem("plan");
-  location.reload();
+function irPago(){
+window.location.href="https://mpago.la/287RTsB";
+}
+
+function activar(){
+let codigo=document.getElementById("codigo").value;
+let codigoHash=hash(codigo);
+let navHash=hash(navigator.userAgent);
+
+if(codigosHash.includes(codigoHash)){
+localStorage.setItem("licencia",codigoHash+"|"+navHash);
+alert("PRO activado correctamente");
+location.reload();
+}else{
+alert("Código inválido");
+}
+}
+
+function logout(){
+localStorage.clear();
+location.reload();
 }
 
 </script>
